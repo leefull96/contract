@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>월 구독 가입계약서</title>
+<style>
+    /* 📄 A4 용지 및 기본 스타일 */
+    body { background-color: #f5f5f5; font-family: "Malgun Gothic", "Dotum", sans-serif; font-size: 10pt; line-height: 1.5; color: #000; margin: 0; padding: 20px; }
+    .page { width: 210mm; min-height: 297mm; padding: 20mm; margin: 0 auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; position: relative; }
+    
+    h1 { text-align: center; font-size: 22pt; font-weight: bold; margin-bottom: 5px; letter-spacing: -1px; }
+    h2 { text-align: center; font-size: 14pt; font-weight: bold; margin-top: 0; margin-bottom: 30px; text-decoration: underline; }
+    .preamble { margin-bottom: 20px; text-align: justify; }
+    .article-title { font-weight: bold; font-size: 11pt; margin-top: 15px; margin-bottom: 5px; background-color: #e0e0e0; padding: 2px 5px; display: block; }
+    .content { margin-bottom: 10px; text-align: justify; padding-left: 2px; }
+    ul.simple-list { margin: 5px 0 5px 20px; padding: 0; list-style-type: disc; }
+    ul.none-list { margin: 5px 0 5px 15px; padding: 0; list-style-type: none; }
+    
+    /* ☑️ 체크박스 섹션 수정 (동의하지 않음 진하게) */
+    .check-section { border: 2px solid #333; padding: 15px; margin: 20px 0; background-color: #f9f9f9; }
+    .check-row { margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; }
+    input[type="checkbox"] { width: 20px; height: 20px; vertical-align: middle; margin: 0 5px; cursor: pointer; }
+
+    /* ✍️ 입력 필드 스타일 */
+    .input-field {
+        border: none;
+        border-bottom: 1px solid #000;
+        background: #fff;
+        font-family: inherit;
+        font-size: 10pt;
+        padding: 0 5px;
+        color: #000;
+        outline: none;
+        text-align: center;
+    }
+    .input-field:focus { border-bottom: 2px solid #ff5722; background-color: #fff8e1; }
+    .input-field:read-only { background-color: transparent !important; border-bottom: none; font-weight: bold; color: #000; }
+    
+    /* 금액/날짜 전용 짧은 인풋 */
+    .input-short { width: 80px; text-align: right; }
+    .input-date { width: 140px; text-align: center; letter-spacing: -0.5px; }
+    
+    /* 하단 테이블 스타일 */
+    table.info-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+    table.info-table td { padding: 5px 2px; vertical-align: top; }
+    .label-col { width: 90px; font-weight: bold; vertical-align: middle !important; }
+
+    /* 🖌️ 서명 캔버스 */
+    .signature-pad-wrapper { position: relative; display: inline-block; vertical-align: bottom; }
+    canvas#signature-pad { border: 2px solid #d00; background-color: #fff0f0; cursor: crosshair; touch-action: none; }
+    .clear-btn { font-size: 8pt; background: #eee; border: 1px solid #999; padding: 2px 5px; margin-left: 5px; cursor: pointer; vertical-align: top; }
+
+    /* 🔘 하단 고정 버튼바 */
+    .floating-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #333; color: white; text-align: center; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 1000; display: flex; justify-content: center; gap: 10px; }
+    .action-btn { background-color: #ff3d00; color: white; border: none; padding: 10px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 5px; cursor: pointer; }
+    .action-btn:hover { background-color: #d63300; }
+    .admin-btn { background-color: #4CAF50; }
+    .admin-btn:hover { background-color: #45a049; }
+
+    /* 인쇄 설정 */
+    @media print {
+        body { background: none; padding: 0; }
+        .page { width: 100%; margin: 0; padding: 0; box-shadow: none; border: none; }
+        .floating-bar, .clear-btn { display: none !important; }
+        .check-section { background-color: white; border: 2px solid #000; }
+        canvas#signature-pad { border: none; background: transparent; }
+        .input-field { border: none; text-align: left; padding: 0; } /* 인쇄 시 테두리 제거 */
+        .input-short { text-align: right; }
+        .input-date { text-align: left; }
+    }
+</style>
+</head>
+<body>
+
+<div class="page" id="contractContent">
+    <h1>월 구독 가입계약서</h1>
+    <h2>(VIP Silver Class)</h2>
+
+    <div class="preamble">
+        ㈜퓨처인베스트리(이하 “회사”라 칭함)와 정기회원 
+        <input type="text" id="topUserName" class="input-field" style="width: 100px;" placeholder="고객명">
+        (이하 “회원”이라 칭함)은 다음과 같이 계약을 체결한다.
+    </div>
+
+    <div class="article-title">제3조 【 정기회원 가입 및 자격 】</div>
+    <div class="content">
+        ① 본 계약을 체결하고 아래와 같이 정기회원으로 가입하는 월 구독 상품 가입비 일금 
+        <input type="text" id="subFee" class="input-field input-short" placeholder="0" oninput="formatNumber(this)">원정을 
+        카드 또는 현금으로 회사의 계좌에 입금함과 동시에 회원 가입이 되어 정기회원의 자격을 가지며, 정기회원가입비는 수수료로서 회원에게 반환되지 아니한다.<br>
+        ② 정기회원 가입비는 아래와 같다.
+        <ul class="simple-list">
+            <li>1개월 회원가입비 일금 500,000원정</li>
+            <li>3개월 회원가입비 일금 1,300,000원정</li>
+            <li>6개월 회원가입비 일금 2,500,000원정</li>
+        </ul>
+        ※ 담당자의 재량에 따라 할인 프로모션을 적용하여 서비스 정가와 다를 수 있습니다.
+    </div>
+
+    <div class="article-title">제1조 【목적】</div>
+    <div class="content">본 계약서는 자본시장과 투자금융업에 관한 법률 규정에 따라 회원이 회사로부터 금융상품에 대한 투자판단 또는 금융투자상품의 가치에 관한 개별성 없는 조언을 제공받음에 있어서, 회원과 회사 간 권리·의무에 관한 사항을 규정함을 목적으로 한다.</div>
+    <div class="article-title">제2조 【용어의 정의 등】</div>
+    <div class="content">
+        ① “회원”이란 본 계약에 대해 담당자로부터 계약 전반에 대해 설명을 듣고, 본 계약에 동의 및 서명하여 회사로부터 금융상품에 대한 투자판단 또는 금융투자상품의 가치에 관한 개별성 없는 조언을 제공받는 고객을 말한다.<br>
+        ② “담당자”란 회원에게 본 계약에 대해 설명하고, 서비스의 전반적인 관리, 회원과 회사간의 원활한 소통을 위하여 회사가 선정한 자를 말한다. 담당자는 원금보전, 수익보장, 일대일 자문 등 관련 법령상 금지된 행위나 본 계약의 내용과 다른 이면약정을 할 권한이 없다.<br>
+        ③ “서비스”란 회사가 회원에게 관련 법령이 허용하는 범위 내에서 금융상품에 대한 투자판단 또는 금융투자상품의 가치에 관한 개별성없는 조언을 제공하는 일체를 말하며, 회사의 공식 채널을 통하여 제공된 정보에 한하며, 담당자의 권한초과행위는 이에 포함되지 아니한다.<br>
+        ④ “콘텐츠”란 회사가 관련 법령이 허용하는 범위 내에서 제공하는 금융투자상품에 대한 투자판단 또는 금융투자상품의 가치에 대한 일체의 투자 정보 참고자료를 말한다.<br>
+        ⑤ “해지”란 회원이 서비스 이용 중 불가피한 사유로 인하여 서비스 이용을 더 이상 원하지 않을 때 서비스 이용을 일체 종료함을 말한다.<br>
+        ⑥ “환불”이란 회원이 서비스를 해지함에 있어서 계약서 제6조에 의거 ⑩항의 할인가에서 ⑦항의 해지공제금을 제외한 나머지 금액을 돌려받음을 말한다.<br>
+        ⑦ “해지공제금”이란 회원이 제6조 제1항에 따른 해지를 요청할 경우, 제6조 제4항에 따라 공제 되는 금액 일체를 말한다.<br>
+        ⑧ “환불금”이란 ⑩항의 할인가에서 본조 ⑦항의 해지공제금을 제외한 나머지 금액을 말한다.<br>
+        ⑨ “해지 위약수수료”란 제7조에 의거 회원의 귀책사유 등으로 인해 발생한 별도의 회사 손해에 대한 배상금을 말한다.<br>
+        ⑩ “할인가”란 회원이 회사의 서비스를 이용하기 위해 지불하는 일체의 비용을 말한다. 할인가는 실제 결제금액을 의미하며, 제6조 제4항의 해지 공제금 정산 시 할인가 중 잔금이 남아있는 경우 이를 포함하여 정산한다.
+    </div>
+    <div class="article-title">제4조 【계약의 성립 등】</div>
+    <div class="content">
+        ① 본 계약은 회원이 서비스를 이용하고자 본 계약서에 동의 및 서명(전자서명 포함, 이하 같음) 함으로써 그 효력이 발생한다. 회원은 계약서에 서명함으로써 계약 체결과정에서 이미 이루 어졌거나 이루어질 개인정보 수집 및 이용에 대하여 동의(추인)한다.<br>
+        ② 대면 계약의 경우 본 계약서를 2부 작성하여 회사와 회원이 각 1부씩 나눠 가지며, 전자 계약의 경우 회사가 정한 전자 계약 플랫폼을 통해 회원과 비대면 계약을 진행한다.<br>
+        ③ 회사는 회원과 대면 계약을 통해 작성된 계약서를 최소 1년간 보관하여야 하며, 전자 계약의 경우 회원이 상시로 계약서를 열람·출력할 수 있도록 전자 계약 플랫폼을 통해 본 계약서를 서비스 이용기간 동안 회원과 공유하여야 한다.<br>
+        ④ 회사는 회원의 서비스 이용기간 중 본 계약서상에 기재된 사항에 대해 변경이 필요할 경우, 지체없이 회원에게 고지한다.<br>
+        ⑤ 본 계약이 체결된 이후 회원과 회사 간 합의로 본 계약의 내용 중 서비스 상품, 회원등급, 이용기간, 가입비, 할인가 등이 변경되는 경우, 합의에 의한 변경 외 나머지 조항들은 본 계약에 기재된 대로 유지된다.<br>
+        ⑥ 회원은 관련법령에 따라 청약철회를 할 수 있다. 다만, 서비스 제공이 개시된 경우 회사의 의사에 반하여 청약철회를 할 수 없다.
+    </div>
+    <div class="article-title">제5조 【정기회원서비스】</div>
+    <div class="content">
+        ① 회사가 정기회원에게 제공하는 서비스의 내용은 다음과 같다.
+        <ul class="none-list">
+            <li>1. 모바일 서비스 : 회사가 관련 법령이 허용하는 범위 내에서 제공하는 금융투자상품에 대한 투자판단 또는 금융투자상품의 가치에 대한 개별성 없는 조언과 콘텐츠를 회원이 당사의 홈페이지 혹은 당사의 서비스 제공 플랫폼(카카오 채널, 유튜브, SNS 등)을 통해 제공받는 일체를 말한다.</li>
+            <li>2. 추천종목 및 부가정보 알림(카카오 채널, 유튜브, SNS 등) 발송</li>
+            <li>3. 기타 이에 부수하거나 신규로 추가되는 서비스</li>
+        </ul>
+        ② 서비스의 내용 및 범위 등은 회원이 보유한 단말, OS의 종류 및 버전, 루팅 여부, 회사의 내부 정책, 회사와의 계약, 기타 운영상/기술상의 필요에 따라 제한되거나 변경될 수 있다. 무권한자에 의한 정보 탈취 등을 방지하고 보안을 강화하기 위하여 회원은 회사의 서비스 내용을 제3자에게 배포할 수 없다. 이를 위반할 경우 회사는 회원에게 제8조에 의거 계약해지와 해지 위약수수료를 청구할 수 있다.<br>
+        ③ 회사와 회원은 회사가 회원에게 서비스를 제공하는 순간부터 서비스를 이용하고 있음을 상호 인정하여 동의하며, 서비스를 이용한 이후 해지하는 경우 제6조에 4항에 의하여 해지공제금을 부과한다.
+    </div>
+    <div class="article-title">제6조 【해지 및 환불안내】</div>
+    <div class="content">
+        ① 회원은 회사 고객센터 '회원관리 담당 부서'에 해지 의사를 밝힌 후, 신청 양식을 전달받아 fuivs2025@gmail.com으로 E-mail을 발송하거나 본 계약서에 명시된 회사의 주소지로 서면을 발송하는 방법에 의하여만 이용 계약의 해지를 요청할 수 있다.<br>
+        ② 회원은 이용 계약에 대한 해지를 요청할 시 회원 본인 확인, 환급에 필요한 신분증 사본(주 민등록번호 뒷자리 제외), 통장 사본 , 주소를 알 수 있는 자료를 첨부해서 제출해야만 한다.<br>
+        ③ 제4항에 따른 해지 공제금이 할인가(실제 결제금액)보다 클 경우 회사는 환불금을 지급하지 아니한다.<br>
+        ④ 회원이 제1항에 따라 이용 해지를 요청하고, 해지 공제금에 대한 동의를 한 경우 본 계약에 대한 해지의 효력이 발생한다. 이 경우 해지 공제금은 회사가 회원의 해지의사가 담긴 전자 우편 또는 서면을 송달 받은 날을 기준(해지기준일)으로 정산하며, 회사는 아래 각호의 금원을 공제한 나머지 금액을 환불금으로 반환한다.
+        <ul class="none-list">
+            <li>1. 해지수수료 : 할인가(실제 결제할 금액, 미납 잔금 포함)의 10%</li>
+            <li>2. 기 이용요금 : 기 이용요금은 할인가(실제 결제할 금액, 미납 잔금 포함)를 기준으로 서비스 이용기간에 대하여 일할 계산한 금액</li>
+            <li>3. 서비스요금 : 서비스 제공이 완료된 컨텐츠 개수 당 1개월 차감</li>
+            <li>4. 회원이 회사의 서비스 이용 중 금융투자상품에 대한 투자판단 및 금융투자상품의 가치에 관한 개별성 없는 조언을 제공받을 경우 한 종목 매수공지 당 1개월 이용분으로 상호 인지 하며, 이후 서비스 해지 시 제6조 제4항 제2호 기 이용요금에 반영한다</li>
+        </ul>
+        ⑤ 회사는 회원의 결제정보 등을 정산 및 분쟁 해결 목적에 한하여, 분쟁해결이 완료될 때까지 관련법령이 정한 기간에 따라 보존할 수 있다.
+    </div>
+    <div class="article-title">제7조 【정보유출 금지 조항】</div>
+    <div class="content">
+        회원은 회사가 회원에게 제공한 모든 정보를 제3자에게 유출할 수 없으며, 회사에서 제공한 모든 서비스, 콘텐츠에 대한 배포 등 일체의 권리는 회사가 갖는다. 이를 어길 경우, 회사는 일방 적으로 본 계약을 해지할 수 있으며, 이에 따른 해지 위약수수료가 별도로 부과될 수 있다. 해지 위약수수료는 제8조 제1항을 기준으로 한다.
+    </div>
+    <div class="article-title">제8조 【귀책사유】</div>
+    <div class="content">
+        ① 회사가 제공한 일체의 서비스, 콘텐츠를 제3자에게 무단으로 유출할 경우 회사는 본 계약을 일방적으로 해지할 수 있으며, 회원의 귀책사유에 의한 해지 위약수수료 1,000,000원을 부과 한다.<br>
+        ② 담당자의 권한초과행위에 대하여 회원은 즉시 회사 홈페이지 고객센터 (이메일 주소: fuivs2025@gmail.com) 로 알려 시정할 기회를 가져야하며, 회사에게 알리지 아니한 담당자의 권한 초과 행위에 대하여 회사는 책임지지 아니한다.
+    </div>
+    <div class="article-title">제9조 【주의사항】</div>
+    <div class="content">
+        ① 회사의 정보제공은 회원의 투자판단의 참고자료에 불과하며, 원금손실의 책임은 회원에게 귀속된다.<br>
+        ② 회사는 본 계약서 외 담당자의 권한초과행위(원금보전, 수익보장, 손실 시 전액환불 보장, 일 대일자문 등), 회사 계좌 외 금전 지급에 대하여 책임지지 아니한다.
+    </div>
+    <div class="article-title">제10조 【전속적 관할합의】</div>
+    <div class="content">
+        회사와 회원 간 본 계약과 관련한 분쟁 발생시 상호 협의로 해결하되, 협의로 해결되지 않는 경우 서울서부지방법원을 1심의 전속적 합의관할법원으로 한다.
+    </div>
+    <div class="article-title">제11조 【대물변제특약】</div>
+    <div class="content">
+        회원은 회사의 승낙이 있는 경우 결제금액 지급에 갈음하여 다른 급부를 할 수 있다.
+    </div>
+    <div class="article-title">제12조 【계약기간】</div>
+    <div class="content">
+        ① 계약기간은 제3조의 회원가입 계약기간별을 기준한다.<br>
+        ② 계약기간이 만료함에 따라 본 계약은 회원에게 별도의 통지 고지없이 자동 해지되며 회사와 회원간 별도의 특약이 있는 경우, 특약사항이 우선 적용됨을 원칙으로 한다.
+    </div>
+
+    <div class="check-section">
+        <div class="article-title" style="margin-top:0; background:none; padding:0;">제13조 【개인정보수집동의 등】</div>
+        <div class="check-row">
+            <label>
+                ◎개인정보 수집 이용에 동의함 . ( 
+                <input type="checkbox" id="agreePrivacy" required> 동의함 체크
+                )
+            </label>
+            &nbsp;&nbsp;
+            <span style="color: black; font-weight: bold;">동의하지 않음 ( x )</span>
+        </div>
+        <div class="check-row">
+            <label>
+                ◎본인은 이용방법과 책임범위 환불규정을 읽고 이해하였습니다 . ( 
+                <input type="checkbox" id="agreeTerms" required> 확인 체크
+                )
+            </label>
+        </div>
+    </div>
+
+    <div class="footer-notice">
+        ※ ㈜ 퓨처인베스트리에서 제공되는 모든 정보는 투자판단의 참고자료이며 , 투자 결정과 결과에 대한 책임은 투자자 본인에게 있습니다.<br>
+        ※ 본인은 본 계약내용에 대하여 충분한 설명을 안내 받아 이해하고 확인하였으므로 ㈜퓨처인베스트리의 주식정보서비스 제공 등 조언 자문을 유료로 이용하기 위하여 정기 회원 가입을 신청하며 이에 동의 하여 본 계약서에 서명 또는 날인합니다.
+    </div>
+
+    <div class="signature-section">
+        <div class="sign-box">
+            <span class="sign-title">(“회사”)</span>
+            <table class="info-table">
+                <tr>
+                    <td class="label-col">상 호 명</td>
+                    <td>주식회사 퓨처인베스트리</td>
+                    <td style="text-align:right;">○인</td>
+                </tr>
+                <tr>
+                    <td class="label-col">사업자등록번호</td>
+                    <td colspan="2">525-86-03460</td>
+                </tr>
+                <tr>
+                    <td class="label-col">주 소</td>
+                    <td colspan="2">인천광역시 남동구 문화로 119-1, 501호(승산빌딩)</td>
+                </tr>
+                <tr>
+                    <td class="label-col">연 락 처</td>
+                    <td colspan="2">032-433-0865</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="sign-box">
+            <span class="sign-title">(“회원”) 회원정보</span>
+            <table class="info-table">
+                <tr>
+                    <td class="label-col">성 함</td>
+                    <td>
+                        <input type="text" id="userName" class="input-field" placeholder="고객 성함">
+                    </td>
+                    <td style="text-align:right; width: 140px;" rowspan="5">
+                        <div class="signature-pad-wrapper">
+                            <canvas id="signature-pad" width="130" height="80"></canvas>
+                            <div style="font-size:8pt; text-align:center;">(서명란)</div>
+                        </div>
+                        <button type="button" class="clear-btn" onclick="clearSignature()">지우기</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label-col">연 락 처</td>
+                    <td>
+                        <input type="text" id="userPhone" class="input-field" placeholder="숫자만 입력" maxlength="13" oninput="formatPhone(this)">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label-col">계약기간</td>
+                    <td>
+                        <input type="text" id="startDate" class="input-field input-date" placeholder="20260211" maxlength="13" oninput="formatDate(this)">
+                        ~
+                        <input type="text" id="endDate" class="input-field input-date" placeholder="20260316" maxlength="13" oninput="formatDate(this)">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label-col">결제금액</td>
+                    <td>
+                        <input type="text" id="paymentAmount" class="input-field input-short" placeholder="0" oninput="formatNumber(this)"> 원
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label-col">결제정보</td>
+                    <td style="vertical-align: top;">
+                        결제금액 지급일자 : 
+                        <input type="text" id="payDate" class="input-field input-date" placeholder="20260211" maxlength="13" oninput="formatDate(this)">
+                        <span id="displayAmount" style="font-weight:bold; margin-left:5px;">0</span>원
+                        <br>
+                        (입금자명 : <span id="depositorName" style="font-weight:bold;"></span>)
+                        <div style="margin-top: 5px;">(기업은행 법인계좌 입금)</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="floating-bar" id="actionBar">
+    <button type="button" id="btnCreateLink" class="action-btn admin-btn" onclick="createCustomerLink()">
+        🔗 고객용 링크 생성 (내용 저장)
+    </button>
+    
+    <button type="button" id="btnSaveContract" class="action-btn" onclick="saveContract()" style="display:none;">
+        서명 완료 및 제출
+    </button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    // 🔴 본인의 Firebase 키값으로 변경해주세요
+    const firebaseConfig = {
+    apiKey: "AIzaSyDMu3NnCwJlkAoCmouYu92cP4Rha4SPFKo",
+    authDomain: "fuinv-f980f.firebaseapp.com",
+    projectId: "fuinv-f980f",
+    storageBucket: "fuinv-f980f.firebasestorage.app",
+    messagingSenderId: "400376860655",
+    appId: "1:400376860655:web:408a516c11ac6aee93f01a"
+  };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.collection = collection;
+    window.addDoc = addDoc;
+    window.doc = doc;
+    window.getDoc = getDoc;
+    
+    checkMode();
+</script>
+
+<script>
+    /* ========== 1. 입력값 자동 포맷팅 함수들 ========== */
+    
+    // 숫자 3자리 콤마 (금액)
+    function formatNumber(input) {
+        let val = input.value.replace(/[^0-9]/g, ""); // 숫자 외 제거
+        if(val) {
+            input.value = Number(val).toLocaleString(); 
+        } else {
+            input.value = "";
+        }
+        // 결제금액 입력 시 아래쪽 텍스트(N원)와 동기화
+        if(input.id === 'paymentAmount') {
+            document.getElementById('displayAmount').textContent = input.value || "0";
+        }
+    }
+
+    // 연락처 하이픈 (010-XXXX-XXXX)
+    function formatPhone(input) {
+        let val = input.value.replace(/[^0-9]/g, "");
+        if (val.length < 4) {
+            input.value = val;
+        } else if (val.length < 7) {
+            input.value = val.substr(0, 3) + "-" + val.substr(3);
+        } else if (val.length < 11) {
+            input.value = val.substr(0, 3) + "-" + val.substr(3, 3) + "-" + val.substr(6);
+        } else {
+            input.value = val.substr(0, 3) + "-" + val.substr(3, 4) + "-" + val.substr(7);
+        }
+    }
+
+    // 날짜 자동 변환 (20260211 -> 2026년 02월 11일)
+    function formatDate(input) {
+        let val = input.value.replace(/[^0-9]/g, ""); // 숫자만 남김
+        
+        // 8자리 입력되면 포맷팅
+        if (val.length >= 8) {
+            const y = val.substr(0, 4);
+            const m = val.substr(4, 2);
+            const d = val.substr(6, 2);
+            input.value = `${y}년 ${m}월 ${d}일`;
+        } else {
+            // 아직 입력 중일 때는 숫자만 보여줌 (사용자 편의)
+            input.value = val; 
+        }
+    }
+
+    /* ========== 2. 서명 캔버스 기능 ========== */
+    const canvas = document.getElementById('signature-pad');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let lastX = 0, lastY = 0;
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    function startDraw(e) {
+        if(canvas.style.pointerEvents === 'none') return; // 비활성 상태면 무시
+        isDrawing = true;
+        const pos = getPos(e);
+        lastX = pos.x; lastY = pos.y;
+        if(e.type === 'touchstart') e.preventDefault();
+    }
+    function moveDraw(e) {
+        if (!isDrawing) return;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        [lastX, lastY] = [pos.x, pos.y];
+        if(e.type === 'touchmove') e.preventDefault();
+    }
+    function endDraw() { isDrawing = false; }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', moveDraw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseout', endDraw);
+    canvas.addEventListener('touchstart', startDraw, {passive: false});
+    canvas.addEventListener('touchmove', moveDraw, {passive: false});
+    canvas.addEventListener('touchend', endDraw);
+
+    function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    function isCanvasBlank() {
+        const blank = document.createElement('canvas');
+        blank.width = canvas.width; blank.height = canvas.height;
+        return canvas.toDataURL() === blank.toDataURL();
+    }
+
+    /* ========== 3. 모드 감지 및 초기화 ========== */
+    function checkMode() {
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('mode');
+        const docId = params.get('id');
+
+        const topName = document.getElementById('topUserName');
+        const btmName = document.getElementById('userName');
+        const depName = document.getElementById('depositorName');
+
+        // A. 관리자(작성) 모드
+        if (!mode && !docId) {
+            // 이름 동기화: 상단 입력 -> 하단 및 입금자명 자동 입력
+            topName.addEventListener('input', function() { 
+                btmName.value = this.value; 
+                depName.textContent = this.value;
+            });
+            btmName.addEventListener('input', function() { 
+                topName.value = this.value; 
+                depName.textContent = this.value;
+            });
+
+            // 관리자는 체크박스와 서명란 비활성화 (수정 불가)
+            document.getElementById('agreePrivacy').disabled = true;
+            document.getElementById('agreeTerms').disabled = true;
+            canvas.style.pointerEvents = 'none'; // 서명 불가
+            document.querySelector('.clear-btn').style.display = 'none';
+            
+            return; 
+        }
+
+        // B. 고객(서명) 모드
+        if (mode === 'sign') {
+            document.getElementById('btnCreateLink').style.display = 'none';
+            document.getElementById('btnSaveContract').style.display = 'block';
+
+            // 입력 필드 값 채우고 수정 막기 (border 없애기)
+            fillData(params, true); 
+            
+            // 관리자가 잠가둔 체크박스와 서명란 풀기 (고객은 서명해야 함)
+            document.getElementById('agreePrivacy').disabled = false;
+            document.getElementById('agreeTerms').disabled = false;
+            canvas.style.pointerEvents = 'auto';
+            document.querySelector('.clear-btn').style.display = 'inline-block';
+        } 
+        
+        // C. 조회(완료) 모드
+        else if (docId) {
+            document.getElementById('actionBar').style.display = 'none';
+            document.querySelector('.clear-btn').style.display = 'none';
+            
+            // Firebase 데이터 로드
+            setTimeout(async () => {
+                if(window.getDoc) {
+                    try {
+                        const docSnap = await window.getDoc(window.doc(window.db, "contracts", docId));
+                        if(docSnap.exists()) {
+                            const data = docSnap.data();
+                            // 객체 형태의 데이터를 URLSearchParams처럼 래핑해서 전달
+                            const mockParams = { get: (k) => data[k] };
+                            fillData(mockParams, true);
+
+                            document.getElementById('agreePrivacy').checked = data.agreedPrivacy;
+                            document.getElementById('agreeTerms').checked = data.agreedTerms;
+                            
+                            // 서명 이미지
+                            const img = new Image();
+                            img.src = data.signatureImage;
+                            img.width = 130; img.height = 80;
+                            const wrapper = document.querySelector('.signature-pad-wrapper');
+                            wrapper.innerHTML = ''; wrapper.appendChild(img);
+                            
+                            // 모든 입력 완전 차단
+                            document.querySelectorAll('input').forEach(i => i.disabled=true);
+                        }
+                    } catch(e) { console.error(e); }
+                }
+            }, 1000);
+        }
+    }
+
+    // 데이터 채우기 도우미 함수
+    function fillData(params, isReadOnly) {
+        const fields = [
+            {id: 'topUserName', key: 'name'},
+            {id: 'userName', key: 'name'},
+            {id: 'subFee', key: 'subFee'},
+            {id: 'userPhone', key: 'phone'},
+            {id: 'startDate', key: 'start'},
+            {id: 'endDate', key: 'end'},
+            {id: 'paymentAmount', key: 'amt'},
+            {id: 'payDate', key: 'payDate'}
+        ];
+
+        fields.forEach(f => {
+            const val = typeof params.get === 'function' ? params.get(f.key) : params[f.key];
+            const el = document.getElementById(f.id);
+            if(val) el.value = val;
+            if(isReadOnly) {
+                el.readOnly = true;
+                el.style.backgroundColor = 'transparent';
+            }
+        });
+        
+        // 입금자명 및 금액 표시 텍스트 별도 처리
+        document.getElementById('depositorName').textContent = typeof params.get === 'function' ? params.get('name') : params['name'];
+        document.getElementById('displayAmount').textContent = typeof params.get === 'function' ? params.get('amt') : params['amt'];
+    }
+
+    /* ========== 4. 링크 생성 및 저장 ========== */
+    function createCustomerLink() {
+        const name = document.getElementById('userName').value;
+        const amt = document.getElementById('paymentAmount').value;
+
+        if(!name || !amt) {
+            alert("고객 성함과 결제금액은 필수입니다.");
+            return;
+        }
+
+        const params = new URLSearchParams();
+        params.append('mode', 'sign');
+        params.append('name', name);
+        params.append('subFee', document.getElementById('subFee').value);
+        params.append('phone', document.getElementById('userPhone').value);
+        params.append('start', document.getElementById('startDate').value);
+        params.append('end', document.getElementById('endDate').value);
+        params.append('amt', amt);
+        params.append('payDate', document.getElementById('payDate').value);
+
+        const link = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+        navigator.clipboard.writeText(link).then(() => {
+            alert("✅ 고객용 링크 복사 완료!\n\n고객에게 전달하세요.");
+        }).catch(() => prompt("링크 복사 실패. 아래 주소를 복사하세요:", link));
+    }
+
+    async function saveContract() {
+        if (!document.getElementById('agreePrivacy').checked || !document.getElementById('agreeTerms').checked) {
+            alert("개인정보 동의 및 약관 확인에 체크해주세요.");
+            return;
+        }
+        if (isCanvasBlank()) {
+            alert("서명을 해주세요.");
+            return;
+        }
+        
+        if(!confirm("서명을 제출하시겠습니까?")) return;
+
+        const signatureData = canvas.toDataURL();
+        const saveData = {
+            name: document.getElementById('userName').value,
+            subFee: document.getElementById('subFee').value,
+            phone: document.getElementById('userPhone').value,
+            start: document.getElementById('startDate').value,
+            end: document.getElementById('endDate').value,
+            amt: document.getElementById('paymentAmount').value,
+            payDate: document.getElementById('payDate').value,
+            agreedPrivacy: true,
+            agreedTerms: true,
+            signatureImage: signatureData,
+            signedAt: new Date()
+        };
+
+        try {
+            await window.addDoc(window.collection(window.db, "contracts"), saveData);
+            alert("✅ 서명이 성공적으로 제출되었습니다.");
+            document.getElementById('btnSaveContract').style.display = 'none';
+            document.querySelector('.clear-btn').style.display = 'none';
+        } catch(e) {
+            alert("오류 발생: " + e.message);
+        }
+    }
+</script>
+
+</body>
+</html>
