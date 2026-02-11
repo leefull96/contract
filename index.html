@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VIP 실버 계약서</title>
+<style>
+  body { font-family: "Malgun Gothic", Arial, sans-serif; margin: 24px; line-height: 1.6; color:#000; }
+  h1, h2 { text-align:center; }
+  .section { margin-top: 24px; }
+  .checkbox-line { margin: 12px 0; }
+  .signature-box { border: 1px solid #000; width: 100%; max-width: 360px; height: 160px; }
+  .signature-box canvas { width: 100%; height: 100%; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  td { padding: 6px; vertical-align: top; }
+  .label { width: 110px; font-weight: bold; }
+  .actions { margin-top: 24px; display:flex; gap:12px; flex-wrap:wrap; }
+  button { padding: 10px 14px; font-size: 16px; }
+  .hint { font-size: 12px; color:#444; }
+</style>
+</head>
+<body>
+
+<h1>월 구독 가입계약서</h1>
+<h2>(VIP Silver Class)</h2>
+
+<p>㈜퓨처인베스트리(이하 “회사”라 칭함)와 정기회원 OOO(이하 “회원”이라 칭함)은 다음과 같이 계약을 체결한다.</p>
+
+<div class="section">
+  <h3>제13조 【개인정보수집동의 등】</h3>
+  <div class="checkbox-line">
+    <label>
+      <input type="checkbox" id="agree1" />
+      ◎ 개인정보 수집 이용에 동의함. (체크)
+    </label>
+  </div>
+  <div class="checkbox-line">
+    <label>
+      <input type="checkbox" id="agree2" />
+      ◎ 본인은 이용방법과 책임범위 환불규정을 읽고 이해하였습니다. (체크)
+    </label>
+  </div>
+</div>
+
+<hr/>
+
+<h3>(“회원”) 회원정보</h3>
+<table>
+  <tr>
+    <td class="label">성 함</td>
+    <td>
+      <input type="text" id="name" placeholder="홍길동" />
+      &nbsp; 서명:
+      <div class="signature-box">
+        <canvas id="signCanvas"></canvas>
+      </div>
+      <div class="actions">
+        <button type="button" onclick="clearSign()">서명 지우기</button>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td class="label">연 락 처</td>
+    <td><input type="text" id="phone" placeholder="010-0000-0000" /></td>
+  </tr>
+</table>
+
+<div class="actions">
+  <button type="button" onclick="submitForm()">제출 / 저장</button>
+</div>
+<p class="hint">※ 체크 2개는 필수이며, 서명은 직접 그려야 합니다. 같은 링크로 다시 열면 저장된 내용이 자동으로 복원됩니다.</p>
+
+<!-- Firebase SDK (모듈 방식) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // TODO: 🔴 여기 아래를 네 Firebase 콘솔에서 복사한 설정으로 교체
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMu3NnCwJlkAoCmouYu92cP4Rha4SPFKo",
+    authDomain: "fuinv-f980f.firebaseapp.com",
+    projectId: "fuinv-f980f",
+    storageBucket: "fuinv-f980f.firebasestorage.app",
+    messagingSenderId: "400376860655",
+    appId: "1:400376860655:web:408a516c11ac6aee93f01a"
+  };
+  // TODO 끝
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // URL에서 id 파라미터 읽기 (계약 건 구분용)
+  const params = new URLSearchParams(window.location.search);
+  let contractId = params.get("id");
+  if (!contractId) {
+    // id 없으면 임시로 하나 만들어서 주소에 붙임
+    contractId = "C-" + Math.random().toString(36).slice(2);
+    const newUrl = window.location.pathname + "?id=" + contractId;
+    window.history.replaceState({}, "", newUrl);
+  }
+
+  // 서명 캔버스 로직
+  const canvas = document.getElementById("signCanvas");
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#000";
+  }
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+
+  let drawing = false;
+
+  canvas.addEventListener("mousedown", () => { drawing = true; ctx.beginPath(); });
+  canvas.addEventListener("mouseup", () => { drawing = false; ctx.beginPath(); });
+  canvas.addEventListener("mouseleave", () => { drawing = false; ctx.beginPath(); });
+  canvas.addEventListener("mousemove", draw);
+
+  canvas.addEventListener("touchstart", (e) => { e.preventDefault(); drawing = true; ctx.beginPath(); });
+  canvas.addEventListener("touchend", (e) => { e.preventDefault(); drawing = false; ctx.beginPath(); });
+  canvas.addEventListener("touchmove", (e) => { e.preventDefault(); drawTouch(e); });
+
+  function draw(e) {
+    if (!drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+  function drawTouch(e) {
+    if (!drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+
+  window.clearSign = function() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+  }
+
+  // 저장
+  window.submitForm = async function() {
+    const agree1 = document.getElementById("agree1").checked;
+    const agree2 = document.getElementById("agree2").checked;
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+
+    if (!agree1 || !agree2) {
+      alert("필수 체크 항목을 모두 체크해주세요.");
+      return;
+    }
+    if (!name) {
+      alert("성함을 입력해주세요.");
+      return;
+    }
+
+    const signatureData = canvas.toDataURL("image/png");
+
+    const data = {
+      agree1,
+      agree2,
+      name,
+      phone,
+      signatureData,
+      updatedAt: new Date()
+    };
+
+    try {
+      await setDoc(doc(db, "contracts", contractId), data, { merge: true });
+      alert("저장되었습니다!");
+    } catch (e) {
+      console.error(e);
+      alert("저장 중 오류가 발생했습니다.");
+    }
+  }
+
+  // 불러오기
+  async function loadData() {
+    try {
+      const snap = await getDoc(doc(db, "contracts", contractId));
+      if (snap.exists()) {
+        const data = snap.data();
+        document.getElementById("agree1").checked = !!data.agree1;
+        document.getElementById("agree2").checked = !!data.agree2;
+        document.getElementById("name").value = data.name || "";
+        document.getElementById("phone").value = data.phone || "";
+
+        if (data.signatureData) {
+          const img = new Image();
+          img.onload = function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          };
+          img.src = data.signatureData;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  loadData();
+</script>
+
+</body>
+</html>
